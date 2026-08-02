@@ -230,7 +230,7 @@ tbody tr:last-child td{border-bottom:none;}
       </svg>
       Sign in with Google
     </button>
-    <p class="gate-error" id="gateError" hidden>That Google account isn't on the access list.</p>
+    <p class="gate-error" id="gateError" hidden></p>
   </div>
 </div>
 
@@ -246,7 +246,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="sub">2 properties &middot; 8 suppliers</div>
       </div>
     </div>
-    <div class="snapshot-tag">Snapshot &middot; Aug 02, 2026 &middot; 6:20 PM<br>Grace period: 25 days</div>
+    <div class="snapshot-tag">Snapshot &middot; Aug 02, 2026 &middot; 6:33 PM<br>Grace period: 25 days</div>
   </header>
 
   <section class="stat-row">
@@ -791,8 +791,10 @@ tbody tr:last-child td{border-bottom:none;}
     location.reload();
   }
 
-  function denyAccess() {
-    document.getElementById("gateError").hidden = false;
+  function denyAccess(message) {
+    var el = document.getElementById("gateError");
+    el.textContent = message;
+    el.hidden = false;
   }
 
   // Full-page redirect flow: no popups, no third-party cookies, works on
@@ -818,16 +820,31 @@ tbody tr:last-child td{border-bottom:none;}
   function handleRedirectResult() {
     if (location.hash.indexOf("id_token=") === -1 && location.hash.indexOf("error=") === -1) return false;
     var hashParams = new URLSearchParams(location.hash.slice(1));
+    var errorParam = hashParams.get("error");
     var token = hashParams.get("id_token");
     history.replaceState(null, "", location.pathname + location.search);
-    if (!token) return false;
+    if (errorParam) {
+      denyAccess("Google sign-in error: " + errorParam);
+      return true;
+    }
+    if (!token) {
+      denyAccess("No sign-in token came back from Google. Try again.");
+      return true;
+    }
     var payload;
-    try { payload = parseJwt(token); } catch (e) { denyAccess(); return true; }
-    if (payload.email && payload.email_verified && ALLOWED.indexOf(payload.email.toLowerCase()) !== -1) {
+    try { payload = parseJwt(token); } catch (e) {
+      denyAccess("Couldn't read the sign-in response (" + e.message + ").");
+      return true;
+    }
+    if (!payload.email) {
+      denyAccess("Sign-in response didn't include an email address.");
+    } else if (!payload.email_verified) {
+      denyAccess("Google reports " + payload.email + " as unverified.");
+    } else if (ALLOWED.indexOf(payload.email.toLowerCase()) === -1) {
+      denyAccess("That Google account (" + payload.email + ") isn't on the access list.");
+    } else {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: payload.email, exp: payload.exp }));
       reveal(payload.email);
-    } else {
-      denyAccess();
     }
     return true;
   }
