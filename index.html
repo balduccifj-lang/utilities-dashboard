@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Utilities Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+:root{
+  color-scheme: light;
+  --paper:#f6f5f1; --surface:#ffffff; --ink:#1b1a17; --ink-2:#5b594f; --ink-3:#8c8a7e;
+  --line:rgba(27,26,23,0.10); --accent:#0e6f6a; --accent-soft:#e3f1ef; --accent-ink:#0b4f4b;
+  --good-bg:#e3f5e1; --good-ink:#136313; --good-dot:#0ca30c;
+  --critical-bg:#fbe3e1; --critical-ink:#8f2a2a; --critical-dot:#d03b3b;
+  --upcoming-bg:#e3f1ef; --upcoming-ink:#0b4f4b; --upcoming-dot:#0e6f6a;
+  --muted-bg:#eeede8; --muted-ink:#5b594f; --muted-dot:#8c8a7e;
+  --shadow: 0 1px 2px rgba(27,26,23,0.06), 0 8px 24px -12px rgba(27,26,23,0.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --paper:#131412; --surface:#1c1e1b; --ink:#f5f4f0; --ink-2:#c9c7ba; --ink-3:#8c8a7e;
+    --line:rgba(255,255,255,0.10); --accent:#2fb3ab; --accent-soft:rgba(47,179,171,0.16); --accent-ink:#8fe0da;
+    --good-bg:rgba(12,163,12,0.18); --good-ink:#7be07b; --good-dot:#2fd12f;
+    --critical-bg:rgba(208,59,59,0.20); --critical-ink:#ff9c93; --critical-dot:#ef5c53;
+    --upcoming-bg:rgba(47,179,171,0.18); --upcoming-ink:#8fe0da; --upcoming-dot:#2fb3ab;
+    --muted-bg:rgba(255,255,255,0.08); --muted-ink:#c9c7ba; --muted-dot:#8c8a7e;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#131412; --surface:#1c1e1b; --ink:#f5f4f0; --ink-2:#c9c7ba; --ink-3:#8c8a7e;
+  --line:rgba(255,255,255,0.10); --accent:#2fb3ab; --accent-soft:rgba(47,179,171,0.16); --accent-ink:#8fe0da;
+  --good-bg:rgba(12,163,12,0.18); --good-ink:#7be07b; --good-dot:#2fd12f;
+  --critical-bg:rgba(208,59,59,0.20); --critical-ink:#ff9c93; --critical-dot:#ef5c53;
+  --upcoming-bg:rgba(47,179,171,0.18); --upcoming-ink:#8fe0da; --upcoming-dot:#2fb3ab;
+  --muted-bg:rgba(255,255,255,0.08); --muted-ink:#c9c7ba; --muted-dot:#8c8a7e;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --paper:#f6f5f1; --surface:#ffffff; --ink:#1b1a17; --ink-2:#5b594f; --ink-3:#8c8a7e;
+  --line:rgba(27,26,23,0.10); --accent:#0e6f6a; --accent-soft:#e3f1ef; --accent-ink:#0b4f4b;
+  --good-bg:#e3f5e1; --good-ink:#136313; --good-dot:#0ca30c;
+  --critical-bg:#fbe3e1; --critical-ink:#8f2a2a; --critical-dot:#d03b3b;
+  --upcoming-bg:#e3f1ef; --upcoming-ink:#0b4f4b; --upcoming-dot:#0e6f6a;
+  --muted-bg:#eeede8; --muted-ink:#5b594f; --muted-dot:#8c8a7e;
+  --shadow: 0 1px 2px rgba(27,26,23,0.06), 0 8px 24px -12px rgba(27,26,23,0.18);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.wrap{max-width:840px;margin:0 auto;padding:20px 16px 64px;}
+
+.page-header{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:4px 2px 20px;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand svg{width:30px;height:30px;color:var(--accent);flex:none;}
+.brand h1{font-size:1.28rem;font-weight:700;margin:0;letter-spacing:-0.01em;text-wrap:balance;}
+.brand .sub{font-size:0.78rem;color:var(--ink-3);margin-top:1px;}
+.snapshot-tag{
+  font-size:0.72rem; color:var(--ink-2); text-align:right; line-height:1.4;
+  font-variant-numeric:tabular-nums;
+}
+
+.stat-row{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:22px;
+}
+.stat{
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:14px 10px; text-align:center; box-shadow:var(--shadow);
+}
+.stat .n{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+.stat .l{font-size:0.68rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.05em;margin-top:4px;display:block;}
+.stat--critical .n{color:var(--critical-ink);}
+.stat--upcoming .n{color:var(--upcoming-ink);}
+.stat--good .n{color:var(--good-ink);}
+
+.property{
+  background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  margin-bottom:16px; box-shadow:var(--shadow); overflow:hidden;
+}
+.property-head{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:16px 18px 12px;
+}
+.property-head h2{font-size:1.05rem;margin:0;font-weight:700;text-wrap:balance;}
+
+.badge{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;}
+.badge--critical{background:var(--critical-bg);color:var(--critical-ink);}
+.badge--upcoming{background:var(--upcoming-bg);color:var(--upcoming-ink);}
+.badge--good{background:var(--good-bg);color:var(--good-ink);}
+
+.supplier-list{border-top:1px solid var(--line);}
+.supplier{border-top:1px solid var(--line);}
+.supplier:first-child{border-top:none;}
+.supplier summary{
+  list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px;
+  padding:12px 18px; user-select:none;
+}
+.supplier summary::-webkit-details-marker{display:none;}
+.supplier summary:hover{background:var(--accent-soft);}
+.supplier[open] summary{background:var(--accent-soft);}
+
+.supplier-icon{
+  width:30px;height:30px;flex:none;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+}
+.supplier-icon svg{width:16px;height:16px;}
+.supplier-name{
+  font-size:0.88rem;font-weight:600;flex:1;min-width:0;
+  display:flex;flex-direction:column;line-height:1.25;
+}
+.supplier-name small{font-weight:400;color:var(--ink-3);font-size:0.72rem;}
+.history{display:flex;gap:4px;flex:none;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.dot--good{background:var(--good-dot);}
+.dot--critical{background:var(--critical-dot);}
+.dot--upcoming{background:var(--upcoming-dot);}
+.dot--muted{background:var(--muted-dot);}
+.dot.is-current{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px currentColor;color:inherit;}
+.dot--good.is-current{color:var(--good-dot);}
+.dot--critical.is-current{color:var(--critical-dot);}
+.dot--upcoming.is-current{color:var(--upcoming-dot);}
+.dot--muted.is-current{color:var(--muted-dot);}
+.hist-empty{font-size:0.7rem;color:var(--ink-3);}
+
+.pill{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;flex:none;}
+.pill--good{background:var(--good-bg);color:var(--good-ink);}
+.pill--critical{background:var(--critical-bg);color:var(--critical-ink);}
+.pill--upcoming{background:var(--upcoming-bg);color:var(--upcoming-ink);}
+.pill--muted{background:var(--muted-bg);color:var(--muted-ink);}
+
+.chev{width:16px;height:16px;color:var(--ink-3);flex:none;transition:transform 0.15s ease;}
+.supplier[open] .chev{transform:rotate(180deg);}
+
+.supplier-detail{padding:0 18px 16px 58px;}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th,td{white-space:nowrap;}
+th{
+  text-align:left;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;
+  color:var(--ink-3);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line);
+}
+td{padding:7px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;}
+td.center,th.center{text-align:center;}
+td.nowrap{white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+
+.footnote{margin-top:20px;font-size:0.8rem;color:var(--ink-2);}
+.footnote summary{cursor:pointer;font-weight:600;}
+.footnote-body{padding-top:10px;}
+.footnote-body ul{margin:6px 0 14px;padding-left:18px;}
+.footnote-body li{margin-bottom:3px;}
+.muted-text{color:var(--ink-3);}
+
+.page-footer{
+  text-align:center;font-size:0.72rem;color:var(--ink-3);margin-top:28px;line-height:1.6;
+}
+
+@media (max-width:520px){
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .history{display:none;}
+  .supplier-name{font-size:0.85rem;}
+  .supplier-detail{padding-left:18px;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .snapshot-tag{text-align:left;}
+}
+@media (prefers-reduced-motion:reduce){
+  .chev{transition:none;}
+}
+
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.gate-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  box-shadow:var(--shadow); padding:32px 28px; max-width:340px; width:100%; text-align:center;
+}
+.gate-card svg{width:36px;height:36px;color:var(--accent);margin-bottom:12px;}
+.gate-card h1{font-size:1.15rem;margin:0 0 6px;}
+.gate-card p{font-size:0.85rem;color:var(--ink-2);margin:0 0 20px;}
+.gate-signin{display:flex;justify-content:center;min-height:40px;}
+.gate-error{color:var(--critical-ink);background:var(--critical-bg);border-radius:10px;padding:8px 12px;font-size:0.8rem;margin-top:14px;}
+.signed-in-as{
+  max-width:840px;margin:0 auto;padding:10px 16px 0;font-size:0.72rem;color:var(--ink-3);
+  text-align:right;
+}
+.signed-in-as button{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;padding:0;text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="icon-drop" viewBox="0 0 24 24"><path d="M12 2.5c3 4 6.5 8.2 6.5 12A6.5 6.5 0 1 1 5.5 14.5C5.5 10.7 9 6.5 12 2.5Z"/></symbol>
+    <symbol id="icon-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></symbol>
+    <symbol id="icon-flame" viewBox="0 0 24 24"><path d="M12 2c1 3-2.5 4-2.5 7 0 1.4 1 2.5 2.5 2.5S14.5 10.4 14.5 9c1.5 1.5 2.5 3.7 2.5 5.5A5 5 0 0 1 7 14.5C7 10 9 6 12 2Z"/></symbol>
+    <symbol id="icon-wifi" viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16.5a5 5 0 0 1 6 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="20.5" r="1.6"/></symbol>
+    <symbol id="icon-building" viewBox="0 0 24 24"><path d="M4 21V4.5A1.5 1.5 0 0 1 5.5 3h9A1.5 1.5 0 0 1 16 4.5V21M16 10h4.5A1.5 1.5 0 0 1 22 11.5V21M4 21h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 7h2M11.5 7h2M7.5 11h2M11.5 11h2M7.5 15h2M11.5 15h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-receipt" viewBox="0 0 24 24"><path d="M6 2h12v19l-2.5-1.6L13 21l-2.5-1.6L8 21l-2.5-1.6L6 2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 7h7M8.5 10.5h7M8.5 14h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+
+<div id="gate">
+  <div class="gate-card">
+    <svg viewBox="0 0 24 24" fill="currentColor"><use href="#icon-receipt"/></svg>
+    <h1>Utilities Tracker</h1>
+    <p>Sign in with an authorized Google account to view.</p>
+    <div id="g_id_onload"
+         data-client_id="830800411304-g42hq9701lgf54ntjnb7dioe0roepb5q.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="gate-signin g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-size="large"></div>
+    <p class="gate-error" id="gateError" hidden>That Google account isn't on the access list.</p>
+  </div>
+</div>
+
+<div class="signed-in-as" id="signedInAs" hidden></div>
+<div id="content" hidden>
+
+<div class="wrap">
+  <header class="page-header">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="currentColor"><use href="#icon-receipt"/></svg>
+      <div>
+        <h1>Utilities Tracker</h1>
+        <div class="sub">2 properties &middot; 8 suppliers</div>
+      </div>
+    </div>
+    <div class="snapshot-tag">Snapshot &middot; Aug 02, 2026 &middot; 5:41 PM<br>Grace period: 25 days</div>
+  </header>
+
+  <section class="stat-row">
+    <div class="stat stat--critical"><span class="n">0</span><span class="l">Overdue</span></div>
+    <div class="stat stat--upcoming"><span class="n">1</span><span class="l">Upcoming</span></div>
+    <div class="stat stat--good"><span class="n">47</span><span class="l">Paid</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">No invoice</span></div>
+  </section>
+
+  <main>
+    
+    <section class="property">
+      <div class="property-head">
+        <h2>Buenos Aires - Riobamba</h2>
+        <span class="badge badge--upcoming">1 upcoming</span>
+      </div>
+      <div class="supplier-list">
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-drop"/></svg></span>
+        <span class="supplier-name">Aysa<small>Water</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--good is-current" title="Jul 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-bolt"/></svg></span>
+        <span class="supplier-name">Edesur<small>Electricity</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--good is-current" title="Jul 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">—</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-building"/></svg></span>
+        <span class="supplier-name">Expensas<small>Building fees</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--upcoming is-current" title="Jul 2026: Upcoming"></span></span>
+        <span class="pill pill--upcoming">Upcoming</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">—</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--upcoming">Upcoming</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-flame"/></svg></span>
+        <span class="supplier-name">Metrogas<small>Gas</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--good is-current" title="Jul 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details></div>
+    </section>
+    <section class="property">
+      <div class="property-head">
+        <h2>Mendoza - Huarpes</h2>
+        <span class="badge badge--good">All caught up</span>
+      </div>
+      <div class="supplier-list">
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-drop"/></svg></span>
+        <span class="supplier-name">Aysam<small>Water</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Dec 2025: Paid"></span><span class="dot dot--good" title="Jan 2026: Paid"></span><span class="dot dot--good" title="Feb 2026 - Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026 - May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026 - Jul 2026: Paid"></span><span class="dot dot--good is-current" title="Aug 2026 - Sep 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Aug 2026 - Sep 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Oct 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026 - Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026 - May 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026 - Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jan 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Feb 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Dec 2025</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jan 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-flame"/></svg></span>
+        <span class="supplier-name">Ecogas<small>Gas</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--good" title="Jul 2026: Paid"></span><span class="dot dot--good is-current" title="Aug 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Aug 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Sep 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-bolt"/></svg></span>
+        <span class="supplier-name">Edemsa<small>Electricity</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Sep 2025 - Oct 2025: Paid"></span><span class="dot dot--good" title="Nov 2025 - Dec 2025: Paid"></span><span class="dot dot--good" title="Jan 2026 - Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026 - Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026 - Jun 2026: Paid"></span><span class="dot dot--good is-current" title="Jul 2026 - Aug 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026 - Aug 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Sep 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026 - Jun 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026 - Apr 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jan 2026 - Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Nov 2025 - Dec 2025</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jan 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Sep 2025 - Oct 2025</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Nov 25, 2025</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details>
+    <details class="supplier">
+      <summary>
+        <span class="supplier-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#icon-wifi"/></svg></span>
+        <span class="supplier-name">Internet<small>Internet</small></span>
+        <span class="history" aria-hidden="true"><span class="dot dot--good" title="Feb 2026: Paid"></span><span class="dot dot--good" title="Mar 2026: Paid"></span><span class="dot dot--good" title="Apr 2026: Paid"></span><span class="dot dot--good" title="May 2026: Paid"></span><span class="dot dot--good" title="Jun 2026: Paid"></span><span class="dot dot--good is-current" title="Jul 2026: Paid"></span></span>
+        <span class="pill pill--good">Paid</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="supplier-detail">
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Period</th><th class="center">Invoice</th><th class="center">Payment</th><th>Est. due</th><th>Status</th></tr></thead>
+          <tbody>
+        <tr>
+          <td>Jul 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Aug 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Jun 2026</td>
+          <td class="center">—</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jul 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>May 2026</td>
+          <td class="center">—</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Jun 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Apr 2026</td>
+          <td class="center">—</td>
+          <td class="center">✓</td>
+          <td class="nowrap">May 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Mar 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Apr 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr>
+        <tr>
+          <td>Feb 2026</td>
+          <td class="center">✓</td>
+          <td class="center">✓</td>
+          <td class="nowrap">Mar 25, 2026</td>
+          <td><span class="pill pill--good">Paid</span></td>
+        </tr></tbody>
+        </table>
+        </div>
+      </div>
+    </details></div>
+    </section>
+  </main>
+
+  <details class="footnote"><summary>Housekeeping notes</summary><div class="footnote-body"><p><strong>49 recent file(s) didn't match a naming pattern</strong> and were skipped:</p><ul><li>202603.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202604.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202605.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202606 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202606.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202607 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202607.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202605 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202604 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202603 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202601 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202602 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\2021512 expensas Riobamba.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202601.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202602.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>Comprobante de paga deuda 2026 01 <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202512 pago.jpg <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202512 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202512 factura.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202511 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202512 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>202512.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202511 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202510 pago.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li>2025\202511 factura.pdf <span class='muted-text'>(Buenos Aires - Riobamba)</span></li><li class='muted-text'>+24 more</li></ul><p class='muted-text'>521 older file(s) from before the current naming convention are hidden here (they're outside the tracked window).</p></div></details>
+
+  <div class="page-footer">
+    Static snapshot &mdash; regenerate locally with <code>python export_dashboard.py</code> to refresh, then re-publish.
+  </div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  var ALLOWED = ["agustinahunicken@gmail.com", "balduccifj@gmail.com", "fedebaldu@gmail.com"];
+  var SESSION_KEY = "utilities_tracker_auth_v1";
+
+  function parseJwt(token) {
+    var base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    var json = decodeURIComponent(
+      atob(base64).split("").map(function(c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join("")
+    );
+    return JSON.parse(json);
+  }
+
+  function reveal(email) {
+    document.getElementById("gate").hidden = true;
+    document.getElementById("content").hidden = false;
+    var bar = document.getElementById("signedInAs");
+    bar.hidden = false;
+    bar.textContent = "";
+    var label = document.createTextNode("Signed in as " + email + " \u00b7 ");
+    var btn = document.createElement("button");
+    btn.id = "signOutBtn";
+    btn.textContent = "Sign out";
+    btn.addEventListener("click", signOut);
+    bar.appendChild(label);
+    bar.appendChild(btn);
+  }
+
+  function signOut() {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
+  function denyAccess() {
+    document.getElementById("gateError").hidden = false;
+  }
+
+  window.handleCredentialResponse = function(resp) {
+    var payload;
+    try { payload = parseJwt(resp.credential); } catch (e) { denyAccess(); return; }
+    if (payload.email && payload.email_verified && ALLOWED.indexOf(payload.email.toLowerCase()) !== -1) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: payload.email, exp: payload.exp }));
+      reveal(payload.email);
+    } else {
+      denyAccess();
+    }
+  };
+
+  try {
+    var saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+    if (saved && saved.exp * 1000 > Date.now() && ALLOWED.indexOf(saved.email.toLowerCase()) !== -1) {
+      reveal(saved.email);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
