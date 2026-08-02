@@ -246,7 +246,7 @@ tbody tr:last-child td{border-bottom:none;}
         <div class="sub">2 properties &middot; 8 suppliers</div>
       </div>
     </div>
-    <div class="snapshot-tag">Snapshot &middot; Aug 02, 2026 &middot; 6:33 PM<br>Grace period: 25 days</div>
+    <div class="snapshot-tag">Snapshot &middot; Aug 02, 2026 &middot; 6:52 PM<br>Grace period: 25 days</div>
   </header>
 
   <section class="stat-row">
@@ -759,6 +759,7 @@ tbody tr:last-child td{border-bottom:none;}
 (function() {
   var ALLOWED = ["agustinahunicken@gmail.com", "balduccifj@gmail.com", "fedebaldu@gmail.com"];
   var CLIENT_ID = "830800411304-g42hq9701lgf54ntjnb7dioe0roepb5q.apps.googleusercontent.com";
+  var REDIRECT_URI = "https://balduccifj-lang.github.io/utilities-dashboard/";
   var SESSION_KEY = "utilities_tracker_auth_v1";
 
   function parseJwt(token) {
@@ -801,11 +802,10 @@ tbody tr:last-child td{border-bottom:none;}
   // every browser. Google appends the ID token to our own URL's fragment
   // when it sends the browser back here -- no server needed to receive it.
   function startSignIn() {
-    var redirectUri = location.origin + location.pathname;
     var nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
     var params = new URLSearchParams({
       client_id: CLIENT_ID,
-      redirect_uri: redirectUri,
+      redirect_uri: REDIRECT_URI,
       response_type: "id_token",
       scope: "openid email",
       nonce: nonce,
